@@ -1,0 +1,67 @@
+{
+  "name": "n8n-nodes-smbclient",
+  "version": "1.0.2",
+  "description": "Transfer files via Samba (SMB2) and smbclient package with n8n, some of the base work are based on https://github.com/drudge/n8n-nodes-smb work.",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n-nodes-smbclient",
+    "smb",
+    "smb",
+    "samba",
+    "binary",
+    "file",
+    "transfer",
+    "node",
+    "n8n"
+  ],
+  "engines": {
+    "node": ">=20.15"
+  },
+  "repository": "https://github.com/JimmyMtl/n8n-nodes-smbclient",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx rimraf dist && tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json",
+    "release": "npx standard-version"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/Smb2Api.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Smb2/Smb2.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^24.4.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^9.35.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
+    "globals": "^16.4.0",
+    "gulp": "^5.0.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "tmp-promise": "^3.0.3"
+  },
+  "overrides": {
+    "form-data": "^4.0.4",
+    "axios": "1.12.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "eslint-plugin-n8n-nodes-base"
+    ]
+  }
+}
