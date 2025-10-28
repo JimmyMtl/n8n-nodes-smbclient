@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smbclient",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Transfer files via Samba (SMB2) and smbclient package with n8n, some of the base work are based on https://github.com/drudge/n8n-nodes-smb work.",
   "keywords": [
     "n8n-community-node-package",
