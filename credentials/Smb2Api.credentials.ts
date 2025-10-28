@@ -1,4 +1,5 @@
 import {
+	Icon,
 	ICredentialType,
 	INodeProperties,
 } from 'n8n-workflow';
@@ -6,6 +7,8 @@ import {
 export class Smb2Api implements ICredentialType {
 	name = 'smb2Api';
 	displayName = 'Smbclient (SMB2) API';
+
+	icon: Icon = 'file:smb2.svg';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Server',
