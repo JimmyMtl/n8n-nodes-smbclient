@@ -1,0 +1,19 @@
+{
+	"node": "n8n-nodes-smbclient.Smb2",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Data & Storage", "Development", "Utility"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/JimmyMtl/n8n-nodes-smbclient"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/JimmyMtl/n8n-nodes-smbclient"
+			}
+		]
+	},
+	"alias": ["SMB","SMB2", "Samba", "SMB3", "CIFS","Binary", "File", "Transfer"]
+}
