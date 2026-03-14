@@ -49,6 +49,7 @@ const maskSecrets = (value: string, secrets: Array<string | undefined>): string 
 	}
 	return result;
 };
+
 export class SmbClientWrapper {
 	constructor(
 		private auth: Smb2Credentials,
@@ -77,13 +78,13 @@ export class SmbClientWrapper {
 	private async runOne(cmd: string): Promise<string> {
 		const args = [...this.buildBaseArgs(), '-c', cmd];
 
-		const { username, password, domain } = this.auth;
+		const {username, password, domain} = this.auth;
 
 		const rawCmd = [this.smbclientPath, ...args].join(' ');
 		const safeCmd = maskSecrets(redactCmd(rawCmd), [username, password, domain]);
 
 		try {
-			const { stdout, stderr } = await execFileAsync(this.smbclientPath, args, {
+			const {stdout, stderr} = await execFileAsync(this.smbclientPath, args, {
 				maxBuffer: 10 * 1024 * 1024,
 			});
 
@@ -279,6 +280,7 @@ export class SmbClientWrapper {
 	async close(): Promise<void> {
 		/* no-op */
 	}
+
 	private escapeSmbArg(value: string): string {
 		return String(value).replace(/"/g, '\\"');
 	}
