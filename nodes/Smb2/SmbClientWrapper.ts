@@ -35,11 +35,20 @@ export function getReadableError(error: any): string {
 const execFileAsync = promisify(execFile);
 const redactCmd = (s: string): string => {
 	if (!s) return s;
-	s = s.replace(/-U\s+(\S=)/g, '-U ***');
-	s = s.replace(/-A\s=\S+/g, '-A ***');
+	s = s.replace(/-U\s+\S+/g, '-U ***');
+	s = s.replace(/-A\s+\S+/g, '-A ***');
 	s = s.replace(/\/\/[^/\s]+\/\S+/g, '//***');
 	return s;
 }
+const maskSecrets = (value: string, secrets: Array<string | undefined>): string => {
+	let result = value;
+	for (const secret of secrets) {
+		if (secret) {
+			result = result.split(secret).join('***');
+		}
+	}
+	return result;
+};
 
 export class SmbClientWrapper {
 	constructor(
@@ -69,29 +78,36 @@ export class SmbClientWrapper {
 	private async runOne(cmd: string): Promise<string> {
 		const args = [...this.buildBaseArgs(), '-c', cmd];
 
+		const {username, password, domain} = this.auth;
+
+		const rawCmd = [this.smbclientPath, ...args].join(' ');
+		const safeCmd = maskSecrets(redactCmd(rawCmd), [username, password, domain]);
+
 		try {
 			const {stdout, stderr} = await execFileAsync(this.smbclientPath, args, {
 				maxBuffer: 10 * 1024 * 1024,
 			});
-// smbclient sometimes prints warnings to stderr; detect real errors
+
+			// smbclient sometimes prints warnings to stderr; detect real errors
 			if (stderr && /NT_STATUS|Error|failed/i.test(stderr)) {
-				const {username, password} = this.auth;
-				const safeCmd = redactCmd([this.smbclientPath, ...args].join(' ')).replace(username, '***').replace(password, '***');
+				const safeErr = maskSecrets(stderr.trim(), [username, password, domain]);
+
 				throw new NodeOperationError(this.node, {
-					message: `smbclient failed. cmd="${safeCmd}" stderr="${stderr.trim()}"`
+					message: `smbclient failed. cmd="${safeCmd}" stderr="${safeErr}"`,
 				});
 			}
+
 			return stdout ?? '';
-		} catch (err) {
+		} catch (err: any) {
+			const safeErr = maskSecrets(
+				err?.stderr?.trim?.() || err?.message || 'smbclient command failed',
+				[username, password, domain]
+			);
 
-			const {username, password} = this.auth;
-			const safeCmd = redactCmd(err?.cmd || [this.smbclientPath, ...args].join(' ')).replace(username, '***').replace(password, '***');
-			const msg = (err?.stderr?.trim?.() || err?.message || 'smbclient command failed').replace(username, '***').replace(password, '***');
 			throw new NodeOperationError(this.node, {
-				message: `smbclient failed. cmd="${safeCmd}" stderr="${String(msg)}`
-			})
+				message: `smbclient failed. cmd="${safeCmd}" stderr="${safeErr}"`,
+			});
 		}
-
 	}
 
 	async stat(remotePath: string): Promise<SmbStat> {
@@ -114,7 +130,16 @@ export class SmbClientWrapper {
 	}
 
 	async list(dir: string): Promise<SmbListEntry[]> {
-		const out = await this.runOne(`ls "${dir}"`);
+		// const out = await this.runOne(`ls "${dir}"`);
+		const normalizedDir = (dir ?? '').trim();
+		const safeDir = this.escapeSmbArg(normalizedDir);
+
+		const command =
+			normalizedDir && normalizedDir !== '/' && normalizedDir !== '.'
+				? `cd "${safeDir}"; ls`
+				: 'ls';
+
+		const out = await this.runOne(command);
 
 		const lines = out
 			.split('\n')
@@ -254,6 +279,10 @@ export class SmbClientWrapper {
 // No persistent connection to close for smbclient CLI, but keep API parity.
 	async close(): Promise<void> {
 		/* no-op */
+	}
+
+	private escapeSmbArg(value: string): string {
+		return String(value).replace(/"/g, '\\"');
 	}
 }
 
