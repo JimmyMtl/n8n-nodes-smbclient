@@ -39,10 +39,10 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.35.0",
+    "@eslint/js": "^10.0.0",
     "@types/node": "^24.9.2",
     "@typescript-eslint/parser": "^8.46.2",
-    "eslint": "^9.38.0",
+    "eslint": "^10.0.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.4",
     "globals": "^17.0.0",
     "gulp": "^5.0.1",
