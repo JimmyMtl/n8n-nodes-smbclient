@@ -1,10 +1,11 @@
 import type {
-	IExecuteFunctions, INodeExecutionData,
+	IExecuteFunctions,
+	INodeExecutionData,
 	INodeType,
-	INodeTypeDescription
+	INodeTypeDescription,
 } from 'n8n-workflow';
-import {Operation} from "./interfaces";
-import {buildClient, handlers} from "./SmbEntryHelpers";
+import { Operation } from './interfaces';
+import { buildClient, handlers } from './SmbEntryHelpers';
 import { NodeOperationError } from 'n8n-workflow';
 export class Smb2 implements INodeType {
 	description: INodeTypeDescription = {
@@ -43,33 +44,47 @@ export class Smb2 implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Delete File', value: 'del', description: 'Delete a file',
-						action: 'Delete a file'
+						name: 'Delete File',
+						value: 'del',
+						description: 'Delete a file',
+						action: 'Delete a file',
 					},
 					{
-						name: 'Get File', value: 'get', description: 'Download a file from SMB',
-						action: 'Get a file'
+						name: 'Get File',
+						value: 'get',
+						description: 'Download a file from SMB',
+						action: 'Get a file',
 					},
 					{
-						name: 'List Directory', value: 'list', description: 'List a directory',
-						action: 'List a directory'
+						name: 'List Directory',
+						value: 'list',
+						description: 'List a directory',
+						action: 'List a directory',
 					},
 					{
-						name: 'Make Directory', value: 'mkdir', description: 'Create a directory',
-						action: 'Create a directory'
+						name: 'Make Directory',
+						value: 'mkdir',
+						description: 'Create a directory',
+						action: 'Create a directory',
 					},
 					{
-						name: 'Remove Directory', value: 'rmdir', description: 'Remove a directory',
-						action: 'Remove a directory'
+						name: 'Remove Directory',
+						value: 'rmdir',
+						description: 'Remove a directory',
+						action: 'Remove a directory',
 					},
 					{
-						name: 'Stat', value: 'stat', description: 'Get file/folder metadata',
-						action: 'Get file folder metadata'
+						name: 'Stat',
+						value: 'stat',
+						description: 'Get file/folder metadata',
+						action: 'Get file folder metadata',
 					},
 					{
-						name: 'Upload File', value: 'put', description: 'Upload a file',
-						action: 'Upload a file'
-					}
+						name: 'Upload File',
+						value: 'put',
+						description: 'Upload a file',
+						action: 'Upload a file',
+					},
 				],
 				default: 'list',
 			},
@@ -104,11 +119,11 @@ export class Smb2 implements INodeType {
 				name: 'putSource',
 				type: 'options',
 				options: [
-					{name: 'Binary Property', value: 'binary'},
-					{name: 'Text', value: 'text'},
+					{ name: 'Binary Property', value: 'binary' },
+					{ name: 'Text', value: 'text' },
 				],
 				default: 'binary',
-				displayOptions: {show: {operation: ['put']}},
+				displayOptions: { show: { operation: ['put'] } },
 			},
 			{
 				displayName: 'Binary Property',
@@ -116,17 +131,17 @@ export class Smb2 implements INodeType {
 				type: 'string',
 				default: 'data',
 				displayOptions: {
-					show: {operation: ['put'], putSource: ['binary']},
+					show: { operation: ['put'], putSource: ['binary'] },
 				},
 			},
 			{
 				displayName: 'Text Content',
 				name: 'textContent',
 				type: 'string',
-				typeOptions: {rows: 4},
+				typeOptions: { rows: 4 },
 				default: '',
 				displayOptions: {
-					show: {operation: ['put'], putSource: ['text']},
+					show: { operation: ['put'], putSource: ['text'] },
 				},
 			},
 
@@ -136,7 +151,7 @@ export class Smb2 implements INodeType {
 				name: 'outBinaryPropertyName',
 				type: 'string',
 				default: 'data',
-				displayOptions: {show: {operation: ['get']}},
+				displayOptions: { show: { operation: ['get'] } },
 			},
 			{
 				displayName: 'File Name (Output)',
@@ -144,14 +159,14 @@ export class Smb2 implements INodeType {
 				type: 'string',
 				default: '',
 				placeholder: 'example.txt',
-				displayOptions: {show: {operation: ['get']}},
+				displayOptions: { show: { operation: ['get'] } },
 			},
 			{
 				displayName: 'MIME Type (Output)',
 				name: 'outMimeType',
 				type: 'string',
 				default: 'application/octet-stream',
-				displayOptions: {show: {operation: ['get']}},
+				displayOptions: { show: { operation: ['get'] } },
 			},
 		],
 	};
@@ -172,11 +187,13 @@ export class Smb2 implements INodeType {
 				out.push(await handler(this, i, client));
 			}
 		} catch (err) {
-			console.error(err)
-			throw new NodeOperationError(this.getNode(), (err as Error)?.message || 'SMB operation failed');
+			console.error(err);
+			throw new NodeOperationError(
+				this.getNode(),
+				(err as Error)?.message || 'SMB operation failed',
+			);
 		} finally {
-			await client.close().catch(() => {
-			});
+			await client.close().catch(() => {});
 		}
 
 		return this.prepareOutputData(out);

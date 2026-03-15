@@ -15,5 +15,5 @@
 			}
 		]
 	},
-	"alias": ["SMB","SMB2", "Samba", "SMB3", "CIFS","Binary", "File", "Transfer"]
+	"alias": ["SMB", "SMB2", "Samba", "SMB3", "CIFS", "Binary", "File", "Transfer"]
 }
