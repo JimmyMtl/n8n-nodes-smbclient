@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smbclient",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Transfer files via Samba (SMB2) and smbclient package with n8n, some of the base work are based on https://github.com/drudge/n8n-nodes-smb work.",
   "keywords": [
     "n8n-community-node-package",
@@ -38,6 +38,7 @@
     ]
   },
   "devDependencies": {
+    "@eslint/compat": "^2.0.3",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^10.0.0",
     "@types/node": "^24.9.2",
@@ -61,7 +62,8 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "eslint-plugin-n8n-nodes-base"
+      "eslint-plugin-n8n-nodes-base",
+      "isolated-vm"
     ]
   }
 }

@@ -1,23 +1,25 @@
 import {
 	IExecuteFunctions,
-	INode, ITriggerFunctions, NodeApiError,
-	NodeOperationError
-} from "n8n-workflow";
-import {promisify} from "node:util";
-import {execFile} from "node:child_process";
-import {Smb2Credentials, SmbListEntry, SmbStat} from "./interfaces";
-import {debuglog} from "util";
+	INode,
+	ITriggerFunctions,
+	NodeApiError,
+	NodeOperationError,
+} from 'n8n-workflow';
+import { promisify } from 'node:util';
+import { execFile } from 'node:child_process';
+import { Smb2Credentials, SmbListEntry, SmbStat } from './interfaces';
+import { debuglog } from 'util';
 
-const debug = debuglog("n8n-nodes-smbclient");
+const debug = debuglog('n8n-nodes-smbclient');
 // Refaire une map d’erreurs si besoin
 const SMB_ERROR_HINTS: Array<[RegExp, string]> = [
-	[/EACCES/i, "Access Denied - Check your permissions for this file/folder"],
-	[/ENOENT/i, "File/Path Not Found"],
-	[/ENOTDIR/i, "Not a directory"],
-	[/ETIMEOUT/i, "Connection timed out"],
-	[/ECONNREFUSED/i, "Could not connect to SMB server - Connection refused"],
-	[/LOGON failure/i, "Logon Failure - Check your username, password, and domain"],
-	[/bad network name/i, "Bad Network Name - The specified share does not exist on the server"],
+	[/EACCES/i, 'Access Denied - Check your permissions for this file/folder'],
+	[/ENOENT/i, 'File/Path Not Found'],
+	[/ENOTDIR/i, 'Not a directory'],
+	[/ETIMEOUT/i, 'Connection timed out'],
+	[/ECONNREFUSED/i, 'Could not connect to SMB server - Connection refused'],
+	[/LOGON failure/i, 'Logon Failure - Check your username, password, and domain'],
+	[/bad network name/i, 'Bad Network Name - The specified share does not exist on the server'],
 	// etc.
 ];
 
@@ -31,7 +33,6 @@ export function getReadableError(error: any): string {
 	return msg;
 }
 
-
 const execFileAsync = promisify(execFile);
 const redactCmd = (s: string): string => {
 	if (!s) return s;
@@ -39,7 +40,7 @@ const redactCmd = (s: string): string => {
 	s = s.replace(/-A\s+\S+/g, '-A ***');
 	s = s.replace(/\/\/[^/\s]+\/\S+/g, '//***');
 	return s;
-}
+};
 const maskSecrets = (value: string, secrets: Array<string | undefined>): string => {
 	let result = value;
 	for (const secret of secrets) {
@@ -54,21 +55,19 @@ export class SmbClientWrapper {
 	constructor(
 		private auth: Smb2Credentials,
 		private smbclientPath: string = 'smbclient',
-		private node: INode
-	) {
-	}
-
+		private node: INode,
+	) {}
 
 	private buildBaseArgs(): string[] {
-		const {host, username, password, domain, share} = this.auth;
+		const { host, username, password, domain, share } = this.auth;
 
-// Anonymous if no username supplied
+		// Anonymous if no username supplied
 		let userPart = '%';
 		if (username) {
 			if (!domain) {
-				userPart = `${username}%${password ?? ''}`
+				userPart = `${username}%${password ?? ''}`;
 			} else {
-				userPart = `${domain}/${username}%${password ?? ''}`
+				userPart = `${domain}/${username}%${password ?? ''}`;
 			}
 		}
 		const hostPart = `\\\\${host}\\${share}`;
@@ -78,13 +77,13 @@ export class SmbClientWrapper {
 	private async runOne(cmd: string): Promise<string> {
 		const args = [...this.buildBaseArgs(), '-c', cmd];
 
-		const {username, password, domain} = this.auth;
+		const { username, password, domain } = this.auth;
 
 		const rawCmd = [this.smbclientPath, ...args].join(' ');
 		const safeCmd = maskSecrets(redactCmd(rawCmd), [username, password, domain]);
 
 		try {
-			const {stdout, stderr} = await execFileAsync(this.smbclientPath, args, {
+			const { stdout, stderr } = await execFileAsync(this.smbclientPath, args, {
 				maxBuffer: 10 * 1024 * 1024,
 			});
 
@@ -101,7 +100,7 @@ export class SmbClientWrapper {
 		} catch (err: any) {
 			const safeErr = maskSecrets(
 				err?.stderr?.trim?.() || err?.message || 'smbclient command failed',
-				[username, password, domain]
+				[username, password, domain],
 			);
 
 			throw new NodeOperationError(this.node, {
@@ -255,7 +254,6 @@ export class SmbClientWrapper {
 		});
 	}
 
-
 	async get(remotePath: string, localPath: string): Promise<void> {
 		await this.runOne(`get "${remotePath}" "${localPath}"`);
 	}
@@ -276,7 +274,7 @@ export class SmbClientWrapper {
 		await this.runOne(`del "${remotePath}"`);
 	}
 
-// No persistent connection to close for smbclient CLI, but keep API parity.
+	// No persistent connection to close for smbclient CLI, but keep API parity.
 	async close(): Promise<void> {
 		/* no-op */
 	}
@@ -287,28 +285,30 @@ export class SmbClientWrapper {
 }
 
 export async function connectToSmbServer(
-	this: IExecuteFunctions | ITriggerFunctions
+	this: IExecuteFunctions | ITriggerFunctions,
 ): Promise<{ client: SmbClientWrapper }> {
 	try {
-		const credentials = (await this.getCredentials("smb2Api")) as unknown as Smb2Credentials;
+		const credentials = (await this.getCredentials('smb2Api')) as unknown as Smb2Credentials;
 
 		debug(
-			"Connecting to //%s/%s as (%s\\%s)",
+			'Connecting to //%s/%s as (%s\\%s)',
 			credentials.host,
 			credentials.share,
-			credentials.domain ?? "",
+			credentials.domain ?? '',
 			credentials.username,
 		);
 		const smbclientPath = this.getNodeParameter('smbclientPath', 0, 'smbclient') as string;
 		const client = new SmbClientWrapper(credentials, smbclientPath, this.getNode());
 
 		// Optionnel: tester existence ou list root pour vérifier la connexion
-		await client.list("");  // ou client.exists(".");
+		await client.list(''); // ou client.exists(".");
 
-		return {client};
+		return { client };
 	} catch (error: any) {
-		debug("Connect error: %O", error);
+		debug('Connect error: %O', error);
 		const readableError = getReadableError(error);
-		throw new NodeApiError(this.getNode(), error, {message: `Failed to connect to SMB server: ${readableError}`});
+		throw new NodeApiError(this.getNode(), error, {
+			message: `Failed to connect to SMB server: ${readableError}`,
+		});
 	}
 }

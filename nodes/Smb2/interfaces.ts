@@ -1,5 +1,5 @@
-import {IExecuteFunctions, INodeExecutionData} from "n8n-workflow";
-import {SmbClientWrapper} from "./SmbClientWrapper";
+import { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
+import { SmbClientWrapper } from './SmbClientWrapper';
 
 interface Smb2Credentials {
 	host: string;
@@ -7,8 +7,8 @@ interface Smb2Credentials {
 	domain?: string;
 	username: string;
 	password: string;
-	port?: number;           // samba-client may not support explicit port
-	maxProtocol?: string;    // passed through
+	port?: number; // samba-client may not support explicit port
+	maxProtocol?: string; // passed through
 	// timeout options (if supported)
 }
 
@@ -31,9 +31,10 @@ type SmbStat = {
 	isDirectory?: boolean;
 };
 type Operation = 'stat' | 'list' | 'get' | 'put' | 'mkdir' | 'rmdir' | 'del';
-type OpHandler = (ctx: IExecuteFunctions, i: number, client: SmbClientWrapper) => Promise<INodeExecutionData>;
+type OpHandler = (
+	ctx: IExecuteFunctions,
+	i: number,
+	client: SmbClientWrapper,
+) => Promise<INodeExecutionData>;
 
-export {
-	SmbStat, SmbListEntry, Smb2Credentials, Operation
-	, OpHandler
-}
+export { SmbStat, SmbListEntry, Smb2Credentials, Operation, OpHandler };
