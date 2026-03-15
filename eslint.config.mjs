@@ -6,81 +6,93 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import js from "@eslint/js";
 import {FlatCompat} from "@eslint/eslintrc";
+import {fixupPluginRules, fixupConfigRules} from "@eslint/compat";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const compat = new FlatCompat({
 	baseDirectory: __dirname,
 	recommendedConfig: js.configs.recommended,
-	allConfig: js.configs.all
+	allConfig: js.configs.all,
 });
 
+const n8nNodesBaseCompat = fixupPluginRules(n8nNodesBase);
+
 export default defineConfig([
-	globalIgnores(["**/.eslintrc.js", "**/*.js", "**/node_modules/**/*", "**/dist/**/*"]),
+	globalIgnores([
+		"**/.eslintrc.js",
+		"**/*.js",
+		"**/node_modules/**/*",
+		"**/dist/**/*",
+	]),
+
 	{
 		languageOptions: {
 			globals: {
 				...globals.browser,
 				...globals.node,
 			},
-
 			parser: tsParser,
-			ecmaVersion: 5,
+			ecmaVersion: "latest",
 			sourceType: "module",
-
 			parserOptions: {
 				project: ["./tsconfig.json"],
 				extraFileExtensions: [".json"],
 			},
 		},
 	},
+
 	{
 		files: ["**/package.json"],
-		extends: compat.extends("plugin:n8n-nodes-base/community"),
-
 		plugins: {
-			"n8n-nodes-base": n8nNodesBase,
+			"n8n-nodes-base": n8nNodesBaseCompat,
 		},
-
+		extends: fixupConfigRules(
+			compat.extends("plugin:n8n-nodes-base/community"),
+		),
 		rules: {
 			"n8n-nodes-base/community-package-json-name-still-default": "off",
 			"n8n-nodes-base/community-package-json-license-missing": "off",
-			"n8n-nodes-base/community-package-json-author-missing": "off"
+			"n8n-nodes-base/community-package-json-author-missing": "off",
 		},
 	},
+
 	{
-		files: ["./credentials/**/*.ts"],
-		extends: compat.extends("plugin:n8n-nodes-base/credentials"),
-
+		files: ["**/credentials/**/*.ts"],
 		plugins: {
-			"n8n-nodes-base": n8nNodesBase,
+			"n8n-nodes-base": n8nNodesBaseCompat,
 		},
-
+		extends: fixupConfigRules(
+			compat.extends("plugin:n8n-nodes-base/credentials"),
+		),
 		rules: {
-			'n8n-nodes-base/cred-class-field-authenticate-type-assertion': 'error',
-			'n8n-nodes-base/cred-class-field-display-name-missing-oauth2': 'error',
-			'n8n-nodes-base/cred-class-field-display-name-miscased': 'error',
-			'n8n-nodes-base/cred-class-field-documentation-url-missing': 'off',
-			'n8n-nodes-base/cred-class-field-documentation-url-miscased': 'off',
-			'n8n-nodes-base/cred-class-field-name-missing-oauth2': 'error',
-			'n8n-nodes-base/cred-class-field-name-unsuffixed': 'error',
-			'n8n-nodes-base/cred-class-field-name-uppercase-first-char': 'error',
-			'n8n-nodes-base/cred-class-field-properties-assertion': 'error',
-			'n8n-nodes-base/cred-class-field-type-options-password-missing': 'error',
-			'n8n-nodes-base/cred-class-name-missing-oauth2-suffix': 'error',
-			'n8n-nodes-base/cred-class-name-unsuffixed': 'error',
-			'n8n-nodes-base/cred-filename-against-convention': 'error',
+			"n8n-nodes-base/cred-class-field-authenticate-type-assertion": "error",
+			"n8n-nodes-base/cred-class-field-display-name-missing-oauth2": "error",
+			"n8n-nodes-base/cred-class-field-display-name-miscased": "error",
+			"n8n-nodes-base/cred-class-field-documentation-url-missing": "off",
+			"n8n-nodes-base/cred-class-field-documentation-url-miscased": "off",
+			"n8n-nodes-base/cred-class-field-name-missing-oauth2": "error",
+			"n8n-nodes-base/cred-class-field-name-unsuffixed": "error",
+			"n8n-nodes-base/cred-class-field-name-uppercase-first-char": "error",
+			"n8n-nodes-base/cred-class-field-properties-assertion": "error",
+			"n8n-nodes-base/cred-class-field-type-options-password-missing": "error",
+			"n8n-nodes-base/cred-class-name-missing-oauth2-suffix": "error",
+			"n8n-nodes-base/cred-class-name-unsuffixed": "error",
+			"n8n-nodes-base/cred-filename-against-convention": "error",
 		},
 	},
+
 	{
-		files: ["./nodes/**/*.ts"],
-		extends: compat.extends("plugin:n8n-nodes-base/nodes"),
-
+		files: ["**/nodes/**/*.ts"],
 		plugins: {
-			"n8n-nodes-base": n8nNodesBase,
+			"n8n-nodes-base": n8nNodesBaseCompat,
 		},
-
+		extends: fixupConfigRules(
+			compat.extends("plugin:n8n-nodes-base/nodes"),
+		),
 		rules: {
+
 			'n8n-nodes-base/node-class-description-credentials-name-unsuffixed': 'error',
 			'n8n-nodes-base/node-class-description-display-name-unsuffixed-trigger-node': 'error',
 			'n8n-nodes-base/node-class-description-empty-string': 'error',
