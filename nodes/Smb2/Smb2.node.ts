@@ -85,6 +85,12 @@ export class Smb2 implements INodeType {
 						description: 'Upload a file',
 						action: 'Upload a file',
 					},
+					{
+						name: 'Rename / Move File',
+						value: 'rename',
+						description: 'Rename or move a file or folder',
+						action: 'Rename or move a file or folder',
+					},
 				],
 				default: 'list',
 			},
@@ -97,7 +103,7 @@ export class Smb2 implements INodeType {
 				default: '/',
 				displayOptions: {
 					show: {
-						operation: ['stat', 'get', 'put', 'del'],
+						operation: ['stat', 'get', 'put', 'del', 'rename'],
 					},
 				},
 			},
@@ -109,6 +115,19 @@ export class Smb2 implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['list', 'mkdir', 'rmdir'],
+					},
+				},
+			},
+			{
+				displayName: 'New Path',
+				name: 'newPath',
+				type: 'string',
+				default: '',
+				placeholder: '/folder/newname.txt',
+				description: 'New path or name for the renamed/moved file or folder',
+				displayOptions: {
+					show: {
+						operation: ['rename'],
 					},
 				},
 			},

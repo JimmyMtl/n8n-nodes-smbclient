@@ -30,7 +30,7 @@ type SmbStat = {
 	attributes?: string[];
 	isDirectory?: boolean;
 };
-type Operation = 'stat' | 'list' | 'get' | 'put' | 'mkdir' | 'rmdir' | 'del';
+type Operation = 'stat' | 'list' | 'get' | 'put' | 'mkdir' | 'rmdir' | 'del' | 'rename';
 type OpHandler = (
 	ctx: IExecuteFunctions,
 	i: number,

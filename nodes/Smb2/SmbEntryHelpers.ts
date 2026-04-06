@@ -117,6 +117,13 @@ const handleDel: OpHandler = async (ctx, i, client) => {
 	return { json: { remotePath, deleted: true } };
 };
 
+const handleRename: OpHandler = async (ctx, i, client) => {
+	const oldPath = str(ctx, i, 'remotePath');
+	const newPath = str(ctx, i, 'newPath');
+	await client.rename(oldPath, newPath);
+	return { json: { oldPath, newPath, renamed: true } };
+};
+
 const handlers: Record<Operation, OpHandler> = {
 	stat: handleStat,
 	list: handleList,
@@ -125,6 +132,7 @@ const handlers: Record<Operation, OpHandler> = {
 	mkdir: handleMkdir,
 	rmdir: handleRmdir,
 	del: handleDel,
+	rename: handleRename,
 };
 
 export { handlers, buildClient };
