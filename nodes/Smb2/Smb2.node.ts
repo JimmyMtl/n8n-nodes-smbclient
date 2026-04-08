@@ -131,6 +131,20 @@ export class Smb2 implements INodeType {
 					},
 				},
 			},
+			{
+				displayName: 'Overwrite If Exists',
+				name: 'overwriteIfExists',
+				type: 'boolean',
+				default: false,
+				description:
+					'If the destination path already exists, delete it before renaming. ' +
+					'Only works for files — overwriting an existing directory is not supported.',
+				displayOptions: {
+					show: {
+						operation: ['rename'],
+					},
+				},
+			},
 
 			/* Put options */
 			{
