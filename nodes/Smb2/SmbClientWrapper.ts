@@ -274,6 +274,10 @@ export class SmbClientWrapper {
 		await this.runOne(`del "${remotePath}"`);
 	}
 
+	async rename(oldPath: string, newPath: string): Promise<void> {
+		await this.runOne(`rename "${oldPath}" "${newPath}"`);
+	}
+
 	// No persistent connection to close for smbclient CLI, but keep API parity.
 	async close(): Promise<void> {
 		/* no-op */
