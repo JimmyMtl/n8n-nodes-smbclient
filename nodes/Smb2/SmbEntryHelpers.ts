@@ -117,6 +117,33 @@ const handleDel: OpHandler = async (ctx, i, client) => {
 	return { json: { remotePath, deleted: true } };
 };
 
+const NOT_FOUND_STATUSES =
+	/NT_STATUS_NO_SUCH_FILE|NT_STATUS_OBJECT_NAME_NOT_FOUND|NT_STATUS_OBJECT_PATH_NOT_FOUND/i;
+
+const handleRename: OpHandler = async (ctx, i, client) => {
+	const oldPath = str(ctx, i, 'remotePath');
+	const newPath = str(ctx, i, 'newPath');
+	const overwriteIfExists = ctx.getNodeParameter('overwriteIfExists', i, false) as boolean;
+
+	let overwritten = false;
+
+	if (overwriteIfExists) {
+		try {
+			await client.del(newPath);
+			overwritten = true;
+		} catch (err: any) {
+			// Swallow only "file not found" errors — the destination simply didn't exist.
+			// Any other error (e.g. NT_STATUS_ACCESS_DENIED) must propagate.
+			if (!NOT_FOUND_STATUSES.test(err?.message ?? '')) {
+				throw err;
+			}
+		}
+	}
+
+	await client.rename(oldPath, newPath);
+	return { json: { oldPath, newPath, renamed: true, overwritten } };
+};
+
 const handlers: Record<Operation, OpHandler> = {
 	stat: handleStat,
 	list: handleList,
@@ -125,6 +152,7 @@ const handlers: Record<Operation, OpHandler> = {
 	mkdir: handleMkdir,
 	rmdir: handleRmdir,
 	del: handleDel,
+	rename: handleRename,
 };
 
 export { handlers, buildClient };
