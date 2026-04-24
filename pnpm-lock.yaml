@@ -25,8 +25,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.1(eslint@10.0.3)
       '@types/node':
-        specifier: ^24.9.2
-        version: 24.12.0
+        specifier: ^24.12.2
+        version: 24.12.2
       '@typescript-eslint/parser':
         specifier: ^8.46.2
         version: 8.57.0(eslint@10.0.3)(typescript@5.9.3)
@@ -149,8 +149,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/node@24.12.0':
-    resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
+  '@types/node@24.12.2':
+    resolution: {integrity: sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g==}
 
   '@typescript-eslint/parser@8.57.0':
     resolution: {integrity: sha512-XZzOmihLIr8AD1b9hL9ccNMzEMWt/dE2u7NyTY9jJG6YNiNthaD5XtUHVF2uCXZ15ng+z2hT3MVuxnUYhq6k1g==}
@@ -1450,7 +1450,7 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
-  '@types/node@24.12.0':
+  '@types/node@24.12.2':
     dependencies:
       undici-types: 7.16.0
 
