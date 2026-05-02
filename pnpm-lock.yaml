@@ -28,7 +28,7 @@ importers:
         specifier: ^24.9.2
         version: 24.12.2
       '@typescript-eslint/parser':
-        specifier: ^8.59.0
+        specifier: ^8.46.2
         version: 8.59.0(eslint@10.2.1)(typescript@5.9.3)
       eslint:
         specifier: ^10.0.0
@@ -1524,8 +1524,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.57.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.57.0(typescript@5.9.3)
-      '@typescript-eslint/types': 8.57.0
+      '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@5.9.3)
+      '@typescript-eslint/types': 8.59.0
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
