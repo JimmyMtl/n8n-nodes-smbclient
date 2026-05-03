@@ -74,6 +74,12 @@ export class Smb2 implements INodeType {
 						action: 'Remove a directory',
 					},
 					{
+						name: 'Rename / Move File',
+						value: 'rename',
+						description: 'Rename or move a file or folder',
+						action: 'Rename or move a file or folder',
+					},
+					{
 						name: 'Stat',
 						value: 'stat',
 						description: 'Get file/folder metadata',
@@ -84,12 +90,6 @@ export class Smb2 implements INodeType {
 						value: 'put',
 						description: 'Upload a file',
 						action: 'Upload a file',
-					},
-					{
-						name: 'Rename / Move File',
-						value: 'rename',
-						description: 'Rename or move a file or folder',
-						action: 'Rename or move a file or folder',
 					},
 				],
 				default: 'list',
