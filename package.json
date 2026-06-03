@@ -58,7 +58,7 @@
   },
   "overrides": {
     "form-data": "^4.0.4",
-    "axios": "1.16.1"
+    "axios": "1.17.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
