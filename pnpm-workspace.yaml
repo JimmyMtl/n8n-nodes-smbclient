@@ -7,6 +7,12 @@
 minimumReleaseAge: 1440
 
 # Packages allowed to run install scripts.
+# pnpm 10 reads `onlyBuiltDependencies`; pnpm 11 renamed it to `allowBuilds`.
+# We keep both so the install passes regardless of the pnpm version CI uses
+# (the workflows pin `pnpm/action-setup` to `version: latest`).
 onlyBuiltDependencies:
   - eslint-plugin-n8n-nodes-base
   - isolated-vm
+allowBuilds:
+  eslint-plugin-n8n-nodes-base: true
+  isolated-vm: true
