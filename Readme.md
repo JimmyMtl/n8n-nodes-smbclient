@@ -94,6 +94,58 @@ The node provides detailed error messages for common SMB issues:
 - Quota issues
 - File sharing violations
 
+## Local testing with Docker Compose
+
+A ready-to-use stack is provided to test the node from the n8n UI against a
+throwaway Samba server. It spins up two services:
+
+- **n8n** — built from `docker/Dockerfile` with the `samba-client` CLI baked in
+  (the node shells out to it) and this package auto-installed into
+  `~/.n8n/nodes` on startup.
+- **smb** — a disposable Samba server (`dperson/samba`) exposing a writable
+  share `n8nshare` for the user `n8n` / `n8npass`.
+
+```bash
+# 1. Build the node (the container loads the compiled dist/, not the .ts)
+npm run build
+
+# 2. Start the stack
+docker compose up --build
+
+# 3. Open http://localhost:5678
+```
+
+In n8n, create an **Smbclient (SMB2) API** credential with:
+
+| Field      | Value      |
+| ---------- | ---------- |
+| Server     | `smb`      |
+| Share Name | `n8nshare` |
+| User Name  | `n8n`      |
+| Password   | `n8npass`  |
+| Domain     | _(empty)_  |
+| Port       | `445`      |
+
+Then add the **SMB2 using smbclient** node and try the operations (List, Upload,
+Download, …) against the share.
+
+After changing the node code, rebuild and reinstall it into the running n8n:
+
+```bash
+npm run build
+REINSTALL_SMB_NODE=true docker compose up -d --force-recreate n8n
+```
+
+The n8n version is configurable (defaults to the latest stable 2.x):
+
+```bash
+N8N_VERSION=2.23.3 docker compose up --build
+```
+
+> n8n 2.x ships as a hardened Alpine image without a package manager, so the
+> Dockerfile installs `samba-client` in a matching Alpine stage and copies the
+> binary and its libraries into the final image.
+
 ## Running local (Development)
 
 > Required podman and n8nio image setup
