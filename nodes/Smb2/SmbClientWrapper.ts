@@ -11,7 +11,13 @@ import { Smb2Credentials, SmbListEntry, SmbStat } from './interfaces';
 import { debuglog } from 'util';
 
 const debug = debuglog('n8n-nodes-smbclient');
-// Refaire une map d’erreurs si besoin
+
+// smbclient reports genuine failures as NT_STATUS_* codes (anything other than
+// NT_STATUS_OK). We use this to catch failures that smbclient prints to stderr
+// while still exiting with code 0, without tripping on benign diagnostics such
+// as deprecation notices or the "Domain=[...] OS=[...]" connection banner.
+const SMB_FAILURE_RE = /NT_STATUS_(?!OK\b)[A-Z0-9_]+/;
+
 const SMB_ERROR_HINTS: Array<[RegExp, string]> = [
 	[/EACCES/i, 'Access Denied - Check your permissions for this file/folder'],
 	[/ENOENT/i, 'File/Path Not Found'],
@@ -74,6 +80,18 @@ export class SmbClientWrapper {
 		return [hostPart, '-U', userPart, '-g'];
 	}
 
+	private fail(safeCmd: string, detail: string): never {
+		const { username, password, domain } = this.auth;
+		const safeErr = maskSecrets((detail || '').trim() || 'smbclient command failed', [
+			username,
+			password,
+			domain,
+		]);
+		// The message must be passed as a string (or via options.message); passing a
+		// `{ message }` object as the second arg leaves NodeOperationError.message empty.
+		throw new NodeOperationError(this.node, `smbclient failed. cmd="${safeCmd}" stderr="${safeErr}"`);
+	}
+
 	private async runOne(cmd: string): Promise<string> {
 		const args = [...this.buildBaseArgs(), '-c', cmd];
 
@@ -82,31 +100,25 @@ export class SmbClientWrapper {
 		const rawCmd = [this.smbclientPath, ...args].join(' ');
 		const safeCmd = maskSecrets(redactCmd(rawCmd), [username, password, domain]);
 
+		let stdout = '';
+		let stderr = '';
 		try {
-			const { stdout, stderr } = await execFileAsync(this.smbclientPath, args, {
+			({ stdout, stderr } = await execFileAsync(this.smbclientPath, args, {
 				maxBuffer: 10 * 1024 * 1024,
-			});
-
-			// smbclient sometimes prints warnings to stderr; detect real errors
-			if (stderr && /NT_STATUS|Error|failed/i.test(stderr)) {
-				const safeErr = maskSecrets(stderr.trim(), [username, password, domain]);
-
-				throw new NodeOperationError(this.node, {
-					message: `smbclient failed. cmd="${safeCmd}" stderr="${safeErr}"`,
-				});
-			}
-
-			return stdout ?? '';
+			}));
 		} catch (err: any) {
-			const safeErr = maskSecrets(
-				err?.stderr?.trim?.() || err?.message || 'smbclient command failed',
-				[username, password, domain],
-			);
-
-			throw new NodeOperationError(this.node, {
-				message: `smbclient failed. cmd="${safeCmd}" stderr="${safeErr}"`,
-			});
+			// Non-zero exit code: smbclient genuinely failed.
+			this.fail(safeCmd, err?.stderr?.trim?.() || err?.message);
 		}
+
+		// Exit code 0, but smbclient occasionally reports a failed `-c` command on
+		// stderr while still exiting cleanly. Only treat real NT_STATUS_* failures as
+		// errors; benign warnings (e.g. on a successful delete) must pass through.
+		if (stderr && SMB_FAILURE_RE.test(stderr)) {
+			this.fail(safeCmd, stderr);
+		}
+
+		return stdout ?? '';
 	}
 
 	async stat(remotePath: string): Promise<SmbStat> {
@@ -129,7 +141,6 @@ export class SmbClientWrapper {
 	}
 
 	async list(dir: string): Promise<SmbListEntry[]> {
-		// const out = await this.runOne(`ls "${dir}"`);
 		const normalizedDir = (dir ?? '').trim();
 		const safeDir = this.escapeSmbArg(normalizedDir);
 
@@ -157,24 +168,6 @@ export class SmbClientWrapper {
 					const date = parts[2];
 					const time = parts[3];
 					const attr = parts[4] ?? '';
-					const attributes = attr.split('').filter(Boolean);
-					return {
-						name,
-						size,
-						date,
-						time,
-						attributes,
-						isDirectory: attributes.includes('D'),
-					} as SmbListEntry;
-				}
-
-				// Alternate pattern seen on some builds: attr|size|date|time|name
-				if (parts.length >= 5 && /^\d+$/.test(parts[1])) {
-					const attr = parts[0] ?? '';
-					const size = Number(parts[1]) || 0;
-					const date = parts[2];
-					const time = parts[3];
-					const name = parts.slice(4).join('|'); // keep any extra pipes in name
 					const attributes = attr.split('').filter(Boolean);
 					return {
 						name,
