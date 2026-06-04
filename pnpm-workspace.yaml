@@ -1,0 +1,12 @@
+# pnpm settings (moved out of the deprecated `pnpm` field in package.json).
+
+# Refuse to resolve/lock any package version published less than this many
+# minutes ago. Mirrors the CI supply-chain policy so `pnpm install` locally
+# picks the same compliant versions CI will accept, instead of the newest
+# release (which may still be inside the cutoff and fail --frozen-lockfile).
+minimumReleaseAge: 1440
+
+# Packages allowed to run install scripts.
+onlyBuiltDependencies:
+  - eslint-plugin-n8n-nodes-base
+  - isolated-vm
