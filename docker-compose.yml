@@ -1,0 +1,63 @@
+name: n8n-nodes-smbclient-dev
+
+# Local stack to test the SMB2 node end-to-end from the n8n UI:
+#   - n8n: built with the samba-client CLI + this node auto-installed
+#   - smb: a throwaway Samba server with a ready-to-use share
+#
+# Usage:
+#   1. npm run build          # produce dist/ on the host
+#   2. docker compose up --build
+#   3. open http://localhost:5678 and create an "Smbclient (SMB2) API" credential:
+#        Server:     smb
+#        Share Name: n8nshare
+#        User Name:  n8n
+#        Password:   n8npass
+#        Domain:     (leave empty)
+#        Port:       445
+#
+# After editing the node code: `npm run build`, then
+#   REINSTALL_SMB_NODE=true docker compose up -d --force-recreate n8n
+
+services:
+  n8n:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        N8N_VERSION: ${N8N_VERSION:-2.23.3}
+    container_name: n8n-smbclient
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_SECURE_COOKIE=false
+      - N8N_RUNNERS_ENABLED=true
+      - GENERIC_TIMEZONE=${TZ:-UTC}
+      - TZ=${TZ:-UTC}
+      # set to true to reinstall the node from /opt/code-temp on next start
+      - REINSTALL_SMB_NODE=${REINSTALL_SMB_NODE:-false}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # the built package, installed into ~/.n8n/nodes by the entrypoint
+      - ./:/opt/code-temp:ro
+    depends_on:
+      - smb
+
+  smb:
+    image: dperson/samba
+    container_name: n8n-smbclient-samba
+    restart: unless-stopped
+    # -u "user;password"
+    # -s "name;path;browseable;readonly;guest;users;admins"
+    command: >-
+      -p
+      -u "n8n;n8npass"
+      -s "n8nshare;/share;yes;no;no;n8n;n8n"
+    ports:
+      - "1445:445" # host:container — only needed to inspect the share from the host
+    volumes:
+      - smb_data:/share
+
+volumes:
+  n8n_data:
+  smb_data:

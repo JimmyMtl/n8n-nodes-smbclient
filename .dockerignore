@@ -1,0 +1,8 @@
+# Keep the build context small. dist/ and the source are bind-mounted at
+# runtime (see docker-compose.yml), not copied into the image.
+.git
+node_modules
+dist
+.idea
+*.tsbuildinfo
+.DS_Store
