@@ -11,7 +11,7 @@
 ARG N8N_VERSION=2.23.3
 
 # ---- Stage 1: collect smbclient + its dependency files ----
-FROM alpine:3.22 AS smb
+FROM alpine:3.23 AS smb
 RUN set -eux; \
 	apk add --no-cache samba-client 2>&1 | tee /tmp/apk.log; \
 	smbclient --version; \
