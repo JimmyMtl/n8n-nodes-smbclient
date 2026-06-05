@@ -12,11 +12,14 @@ import { debuglog } from 'util';
 
 const debug = debuglog('n8n-nodes-smbclient');
 
-// smbclient reports genuine failures as NT_STATUS_* codes (anything other than
-// NT_STATUS_OK). We use this to catch failures that smbclient prints to stderr
-// while still exiting with code 0, without tripping on benign diagnostics such
-// as deprecation notices or the "Domain=[...] OS=[...]" connection banner.
-const SMB_FAILURE_RE = /NT_STATUS_(?!OK\b)[A-Z0-9_]+/;
+// smbclient's exit code is unreliable — it can exit non-zero even when the
+// requested command actually succeeded (notably `del`/`rename` against some
+// Windows servers, which complete the operation but still return a failure
+// status). The reliable signal is whether its output contains a genuine
+// NT_STATUS_* error code. We therefore key success/failure off this pattern
+// rather than the exit code. Excluded: NT_STATUS_OK (success) and the benign
+// end-of-listing markers emitted during normal `ls`/`del` wildcard expansion.
+const SMB_FAILURE_RE = /NT_STATUS_(?!OK\b|NO_MORE_FILES\b|NO_MORE_ENTRIES\b)[A-Z0-9_]+/;
 
 const SMB_ERROR_HINTS: Array<[RegExp, string]> = [
 	[/EACCES/i, 'Access Denied - Check your permissions for this file/folder'],
@@ -107,15 +110,23 @@ export class SmbClientWrapper {
 				maxBuffer: 10 * 1024 * 1024,
 			}));
 		} catch (err: any) {
-			// Non-zero exit code: smbclient genuinely failed.
-			this.fail(safeCmd, err?.stderr?.trim?.() || err?.message);
+			// execFile rejects both when smbclient can't be run (spawn error,
+			// timeout/kill) and when it merely exits non-zero. The latter is not a
+			// reliable failure signal, so only treat it as an error when smbclient
+			// could not run at all, or when its output reports a real NT_STATUS_*
+			// failure. Otherwise keep its output and fall through as success.
+			stdout = typeof err?.stdout === 'string' ? err.stdout : '';
+			stderr = typeof err?.stderr === 'string' ? err.stderr : '';
+			const couldNotRun = typeof err?.code !== 'number' || err?.killed === true;
+			if (couldNotRun || SMB_FAILURE_RE.test(`${stdout}\n${stderr}`)) {
+				this.fail(safeCmd, stderr.trim() || stdout.trim() || err?.message);
+			}
 		}
 
-		// Exit code 0, but smbclient occasionally reports a failed `-c` command on
-		// stderr while still exiting cleanly. Only treat real NT_STATUS_* failures as
-		// errors; benign warnings (e.g. on a successful delete) must pass through.
-		if (stderr && SMB_FAILURE_RE.test(stderr)) {
-			this.fail(safeCmd, stderr);
+		// smbclient sometimes reports a failed command in its output while still
+		// exiting cleanly, so check the output regardless of the exit code.
+		if (SMB_FAILURE_RE.test(`${stdout}\n${stderr}`)) {
+			this.fail(safeCmd, stderr.trim() || stdout.trim());
 		}
 
 		return stdout ?? '';
