@@ -1,0 +1,5 @@
+# Shell scripts must keep LF endings, otherwise the CRLF shebang breaks
+# `exec` inside Linux/Docker ("No such file or directory"). This matters on
+# Windows checkouts where core.autocrlf would otherwise rewrite them.
+*.sh text eol=lf
+docker/entrypoint.sh text eol=lf
