@@ -17,6 +17,17 @@ name: n8n-nodes-smbclient-dev
 #
 # After editing the node code: `npm run build`, then
 #   REINSTALL_SMB_NODE=true docker compose up -d --force-recreate n8n
+#
+# Connecting to the share from your host (the `smb` service publishes 1445:445):
+#   - smbclient supports an explicit port, so from WSL / Git-Bash / Linux:
+#       smbclient //localhost/n8nshare -p 1445 -U 'n8n%n8npass'
+#   - Windows Explorer / `net use` cannot use a custom port (UNC has no port
+#     syntax) and Windows already binds 445 for its own file sharing, so you
+#     cannot simply republish this service as "445:445". To map a drive letter
+#     you must first free 445 (stop the "Server"/LanmanServer service), change
+#     the published port below to "445:445", then:
+#       net use Z: \\localhost\n8nshare /user:n8n n8npass
+#     Re-enable LanmanServer afterwards.
 
 services:
   n8n:
