@@ -5,8 +5,7 @@ import {
 	NodeApiError,
 	NodeOperationError,
 } from 'n8n-workflow';
-import { promisify } from 'node:util';
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { Smb2Credentials, SmbListEntry, SmbStat } from './interfaces';
 import { debuglog } from 'util';
 
@@ -20,6 +19,15 @@ const debug = debuglog('n8n-nodes-smbclient');
 // rather than the exit code. Excluded: NT_STATUS_OK (success) and the benign
 // end-of-listing markers emitted during normal `ls`/`del` wildcard expansion.
 const SMB_FAILURE_RE = /NT_STATUS_(?!OK\b|NO_MORE_FILES\b|NO_MORE_ENTRIES\b)[A-Z0-9_]+/;
+
+// smbclient also prints NT_STATUS_* lines to stderr that carry a status code but
+// do NOT mean the requested operation failed. The main offender is the VFS
+// "shadow copy" probe that many Samba builds run on `allinfo`, e.g.:
+//   NT_STATUS_INVALID_DEVICE_REQUEST getting shadow copy data for \file.txt
+// These benign lines must be stripped before failure detection, otherwise a
+// perfectly good `stat` would be reported as an error.
+const BENIGN_WARNING_RE = /^.*NT_STATUS_\w+\s+getting shadow copy data.*$/gim;
+const stripBenignWarnings = (s: string): string => s.replace(BENIGN_WARNING_RE, '');
 
 const SMB_ERROR_HINTS: Array<[RegExp, string]> = [
 	[/EACCES/i, 'Access Denied - Check your permissions for this file/folder'],
@@ -42,7 +50,6 @@ export function getReadableError(error: any): string {
 	return msg;
 }
 
-const execFileAsync = promisify(execFile);
 const redactCmd = (s: string): string => {
 	if (!s) return s;
 	s = s.replace(/-U\s+\S+/g, '-U ***');
@@ -95,7 +102,7 @@ export class SmbClientWrapper {
 		throw new NodeOperationError(this.node, `smbclient failed. cmd="${safeCmd}" stderr="${safeErr}"`);
 	}
 
-	private async runOne(cmd: string): Promise<string> {
+	private runOne(cmd: string): Promise<string> {
 		const args = [...this.buildBaseArgs(), '-c', cmd];
 
 		const { username, password, domain } = this.auth;
@@ -103,45 +110,83 @@ export class SmbClientWrapper {
 		const rawCmd = [this.smbclientPath, ...args].join(' ');
 		const safeCmd = maskSecrets(redactCmd(rawCmd), [username, password, domain]);
 
-		let stdout = '';
-		let stderr = '';
-		try {
-			({ stdout, stderr } = await execFileAsync(this.smbclientPath, args, {
-				maxBuffer: 10 * 1024 * 1024,
-			}));
-		} catch (err: any) {
-			// execFile rejects both when smbclient can't be run (spawn error,
-			// timeout/kill) and when it merely exits non-zero. The latter is not a
-			// reliable failure signal, so only treat it as an error when smbclient
-			// could not run at all, or when its output reports a real NT_STATUS_*
-			// failure. Otherwise keep its output and fall through as success.
-			stdout = typeof err?.stdout === 'string' ? err.stdout : '';
-			stderr = typeof err?.stderr === 'string' ? err.stderr : '';
-			const couldNotRun = typeof err?.code !== 'number' || err?.killed === true;
-			if (couldNotRun || SMB_FAILURE_RE.test(`${stdout}\n${stderr}`)) {
-				this.fail(safeCmd, stderr.trim() || stdout.trim() || err?.message);
-			}
-		}
+		// We stream stdout/stderr through `spawn` rather than buffering with
+		// `execFile`'s fixed `maxBuffer`: large directory listings (e.g. 160k+
+		// files) easily exceed any sane cap and would otherwise fail with
+		// ERR_CHILD_PROCESS_STDIO_MAXBUFFER. Output is bounded only by heap.
+		return new Promise<string>((resolve, reject) => {
+			const child = spawn(this.smbclientPath, args, { windowsHide: true });
 
-		// smbclient sometimes reports a failed command in its output while still
-		// exiting cleanly, so check the output regardless of the exit code.
-		if (SMB_FAILURE_RE.test(`${stdout}\n${stderr}`)) {
-			this.fail(safeCmd, stderr.trim() || stdout.trim());
-		}
+			const outChunks: Buffer[] = [];
+			const errChunks: Buffer[] = [];
+			let spawnError: Error | undefined;
 
-		return stdout ?? '';
+			child.stdout.on('data', (c: Buffer) => outChunks.push(c));
+			child.stderr.on('data', (c: Buffer) => errChunks.push(c));
+			child.on('error', (e: Error) => {
+				spawnError = e;
+			});
+
+			child.on('close', (code: number | null, signal: string | null) => {
+				const stdout = Buffer.concat(outChunks).toString('utf8');
+				const stderr = Buffer.concat(errChunks).toString('utf8');
+
+				// smbclient's exit code is unreliable (it can exit non-zero on
+				// success), so we do NOT key failure off `code`. We only fail when
+				// the process could not run at all (spawn error or it was killed by a
+				// signal) or when its output contains a real NT_STATUS_* error.
+				const couldNotRun = !!spawnError || signal != null;
+				const diagnostics = stripBenignWarnings(`${stdout}\n${stderr}`);
+				try {
+					if (couldNotRun || SMB_FAILURE_RE.test(diagnostics)) {
+						this.fail(
+							safeCmd,
+							stripBenignWarnings(stderr).trim() ||
+								stdout.trim() ||
+								spawnError?.message ||
+								`smbclient exited (code=${code}, signal=${signal})`,
+						);
+					}
+					resolve(stdout);
+				} catch (err) {
+					reject(err);
+				}
+			});
+		});
 	}
 
 	async stat(remotePath: string): Promise<SmbStat> {
 		const out = await this.runOne(`allinfo "${remotePath}"`);
+
+		// `allinfo` output is colon-delimited "key: value" (NOT pipe-delimited —
+		// the `-g` flag has no effect on it), e.g.:
+		//   altname:      SOMEFI~1.PDF
+		//   create_time:  Thu Sep  4 14:39:03 2025 CEST
+		//   attributes:   A (20)
+		//   stream:       [::$DATA], 2058 bytes
+		// Time values contain colons, so we split on the FIRST colon only.
 		const info = new Map<string, string>();
 		for (const line of out.split('\n')) {
-			const [k, v] = line.split('|');
-			if (k && v !== undefined) info.set(k.trim().toUpperCase(), v.trim());
+			const idx = line.indexOf(':');
+			if (idx === -1) continue;
+			const key = line.slice(0, idx).trim().toUpperCase();
+			const value = line.slice(idx + 1).trim();
+			if (key) info.set(key, value);
 		}
-		const attrs = (info.get('ATTRIBUTES') ?? '').split('').filter(Boolean);
+
+		// "A (20)" -> letter flags only ("A"); drop the trailing "(hex)" annotation.
+		const attrs = (info.get('ATTRIBUTES') ?? '')
+			.split('(')[0]
+			.trim()
+			.split('')
+			.filter((c) => /[A-Za-z]/.test(c));
+
+		// There is no `size` key — the byte count lives in the stream line, e.g.
+		// "[::$DATA], 2058 bytes" (absent for directories).
+		const sizeMatch = (info.get('STREAM') ?? '').match(/(\d+)\s*bytes/i);
+
 		return {
-			size: info.get('SIZE') ? Number(info.get('SIZE')) : undefined,
+			size: sizeMatch ? Number(sizeMatch[1]) : undefined,
 			createTime: info.get('CREATE_TIME') ?? undefined,
 			accessTime: info.get('ACCESS_TIME') ?? undefined,
 			writeTime: info.get('WRITE_TIME') ?? undefined,
