@@ -1,36 +1,75 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+# Manually-triggered release: bump the version, commit/tag it, then publish to npm.
+#
+# Trigger it from the Actions tab ("Run workflow") and supply `version`:
+#   - an explicit semver, e.g. "1.2.0"
+#   - or a bump keyword: "patch" | "minor" | "major"
+#
+# The workflow writes that version into package.json, commits it back to the
+# branch and creates a matching `vX.Y.Z` tag, then publishes — so you never have
+# to edit package.json by hand for a release.
+#
+# Requires the NPM_TOKEN secret (an npm automation token with publish rights).
 
-name: Build and Publish Node.js Package
+name: Version Bump and Publish
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (explicit semver like 1.2.0, or patch/minor/major)'
+        required: true
+        type: string
+
+# Needed so the workflow can push the version-bump commit and tag back.
+permissions:
+  contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-        with:
-          version: latest
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-      - run: pnpm install --frozen-lockfile
-
   publish-npm:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Use a token that can push the bump commit/tag back to the repo.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: pnpm/action-setup@v6
         with:
           version: latest
+
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm publish --no-git-checks
+
+      # Write the requested version into package.json (no tag/commit yet — we do
+      # that ourselves below so the message and tag are under our control).
+      - name: Set version
+        id: bump
+        run: |
+          NEW_VERSION=$(pnpm version "${{ inputs.version }}" --no-git-tag-version | tail -n1)
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Releasing ${NEW_VERSION}"
+
+      # Commit the bump and tag it, then push both back to the triggering branch.
+      # NOTE: this pushes directly to the branch the workflow ran on. If that
+      # branch is protected (required reviews/checks), the default GITHUB_TOKEN
+      # push will be rejected — run releases from an unprotected branch or swap
+      # in a PAT/deploy key with bypass rights.
+      - name: Commit and tag
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          TAG="${{ steps.bump.outputs.version }}"
+          git commit -am "chore(release): ${TAG}"
+          git tag -a "${TAG}" -m "${TAG}"
+          git push origin HEAD
+          git push origin "${TAG}"
+
+      # `prepublishOnly` (build + strict lint) runs automatically here.
+      - name: Publish to npm
+        run: pnpm publish --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
