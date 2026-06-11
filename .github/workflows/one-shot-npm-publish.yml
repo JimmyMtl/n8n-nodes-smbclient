@@ -49,9 +49,12 @@ jobs:
       - name: Set version
         id: bump
         run: |
-          NEW_VERSION=$(pnpm version "${{ inputs.version }}" --no-git-tag-version | tail -n1)
-          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Releasing ${NEW_VERSION}"
+          # `pnpm version` prints a human message ("Releasing pkg: x → y"), not
+          # the bare version, so read the result back from package.json instead.
+          pnpm version "${{ inputs.version }}" --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Releasing v${NEW_VERSION}"
 
       # Commit the bump and tag it, then push both back to the triggering branch.
       # NOTE: this pushes directly to the branch the workflow ran on. If that
