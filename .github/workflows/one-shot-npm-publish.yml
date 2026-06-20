@@ -28,7 +28,7 @@ jobs:
   publish-npm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Use a token that can push the bump commit/tag back to the repo.
           token: ${{ secrets.GITHUB_TOKEN }}
