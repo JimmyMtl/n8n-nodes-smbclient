@@ -58,6 +58,6 @@
   },
   "overrides": {
     "form-data": "^4.0.4",
-    "axios": "1.18.0"
+    "axios": "1.18.1"
   }
 }
