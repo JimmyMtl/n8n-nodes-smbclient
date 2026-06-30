@@ -8,7 +8,7 @@
 # into the final image.
 
 # Declared before the first FROM so it can be used in the stage-2 FROM line.
-ARG N8N_VERSION=2.28.0
+ARG N8N_VERSION=2.28.2
 
 # ---- Stage 1: collect smbclient + its dependency files ----
 FROM alpine:3.24 AS smb
