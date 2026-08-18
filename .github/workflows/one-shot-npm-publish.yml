@@ -20,12 +20,24 @@ on:
         required: true
         type: string
 
-# Needed so the workflow can push the version-bump commit and tag back.
+# `contents: write` so the workflow can push the version-bump commit and tag back;
+# the rest is for the CVE gate's SARIF upload.
 permissions:
+  actions: read
   contents: write
+  security-events: write
 
 jobs:
+  # Hard gate: no bump, no tag, no publish if a known vulnerability is found.
+  cve-scan:
+    uses: ./.github/workflows/security-cve.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
   publish-npm:
+    needs: cve-scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
