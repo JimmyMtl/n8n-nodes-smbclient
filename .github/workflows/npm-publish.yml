@@ -1,5 +1,7 @@
 # This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
 # For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+#
+# Nothing is published unless the CVE gate (security-cve.yml) passes first.
 
 name: Build and Publish Node.js Package
 
@@ -7,8 +9,23 @@ on:
   release:
     types: [created]
 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 jobs:
+  # Hard gate: re-scan the exact code being released. A known vulnerability
+  # here blocks build + publish.
+  cve-scan:
+    uses: ./.github/workflows/security-cve.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
   build:
+    needs: cve-scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
