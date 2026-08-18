@@ -38,7 +38,7 @@ importers:
         version: 1.16.7(eslint@10.7.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@7.0.2)
       globals:
         specifier: ^17.6.0
-        version: 17.7.0
+        version: 17.11.0
       gulp:
         specifier: ^5.0.1
         version: 5.0.1
@@ -823,8 +823,8 @@ packages:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
     engines: {node: '>=18'}
 
-  globals@17.7.0:
-    resolution: {integrity: sha512-Czmyns5dUsq4seFBR/Kdydhmo8y9kC79hiSkPn0YcGtNnYWnrgt0vjrSjx9tspoDGWm2CMarffRuLjM4xUz8xg==}
+  globals@17.11.0:
+    resolution: {integrity: sha512-Z2I8hM+PbJDXQDq3Icgpzv+mPdwr68iZUU9d5WW4FuXfDUQfkZaZuvjMv42/5crNyw154+9+VWXbYrUgDXbxNw==}
     engines: {node: '>=18'}
 
   glogg@2.2.0:
@@ -2321,7 +2321,7 @@ snapshots:
 
   globals@14.0.0: {}
 
-  globals@17.7.0: {}
+  globals@17.11.0: {}
 
   glogg@2.2.0:
     dependencies:
