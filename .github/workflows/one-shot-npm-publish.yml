@@ -42,8 +42,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Use a token that can push the bump commit/tag back to the repo.
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Push the bump commit and tag over SSH using a write-enabled deploy
+          # key. The default GITHUB_TOKEN cannot do this: the "CVE gate" ruleset
+          # requires the "OSV Dependency Scan / osv-scan" check on main, and a
+          # freshly created bump commit has no such check, so the push is
+          # rejected with GH013. Deploy keys are the ruleset's bypass actor
+          # (GitHub only allows the GitHub Actions app as a bypass actor on
+          # organisation-owned repos, not personal ones).
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
 
       - uses: pnpm/action-setup@v6
         with:
