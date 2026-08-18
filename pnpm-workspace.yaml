@@ -16,3 +16,20 @@ onlyBuiltDependencies:
 allowBuilds:
   eslint-plugin-n8n-nodes-base: true
   isolated-vm: true
+
+# Force patched versions of transitive dependencies flagged by the OSV scan
+# (see .github/workflows/security-cve.yml). Each entry pins the lowest release
+# that carries the fix; drop an entry once the direct dependency pulls in a
+# patched version on its own.
+#
+# `tmp` is the only one that reaches published consumers — it arrives through
+# our single runtime dependency, tmp-promise. The rest are dev-only, coming in
+# via eslint/gulp.
+overrides:
+  brace-expansion@1: ^1.1.18 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
+  brace-expansion@5: ^5.0.9 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
+  form-data: ^4.0.6 # GHSA-hmw2-7cc7-3qxx
+  js-yaml@4: ^4.3.1 # GHSA-5p4m-2wfm-xmqj
+  lodash: ^4.18.0 # GHSA-f23m-r3pf-42rh, GHSA-r5fr-rjxr-66jc
+  tmp: ^0.2.6 # GHSA-ph9p-34f9-6g65 (runtime, via tmp-promise)
+  uuid@10: ^11.1.1 # GHSA-w5hq-g745-h8pq
