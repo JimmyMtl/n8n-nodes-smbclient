@@ -11,7 +11,7 @@ overrides:
   js-yaml@4: ^4.3.1
   lodash: ^4.18.0
   tmp: ^0.2.6
-  uuid@10: ^11.1.1
+  uuid@10: ^14.0.0
 
 importers:
 
@@ -1318,8 +1318,8 @@ packages:
   util@0.12.5:
     resolution: {integrity: sha512-kZf/K6hEIrWHI6XqOFUiiMa+79wE/D8Q+NCNAWclkyg3b4d2k7s0QGepNjiABc+aR3N1PAyHL7p6UcLY6LmrnA==}
 
-  uuid@11.1.1:
-    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
+  uuid@14.0.2:
+    resolution: {integrity: sha512-xZe/16rV4aa+HGSOCiY2YeLT1OybRLrrkL/Rqaq7p7GMVXjFh+6wN4oMYgjFmnSnhY8t6Xpdl2l9qmnHYuMHwQ==}
     hasBin: true
 
   v8flags@4.0.1:
@@ -2410,7 +2410,7 @@ snapshots:
       recast: 0.22.0
       title-case: 3.0.3
       transliteration: 2.3.5
-      uuid: 11.1.1
+      uuid: 14.0.2
       xml2js: 0.6.2
       zod: 3.25.67
 
@@ -2746,7 +2746,7 @@ snapshots:
       is-typed-array: 1.1.15
       which-typed-array: 1.1.20
 
-  uuid@11.1.1: {}
+  uuid@14.0.2: {}
 
   v8flags@4.0.1: {}
 
