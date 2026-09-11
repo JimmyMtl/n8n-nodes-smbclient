@@ -23,7 +23,7 @@ overrides:
   brace-expansion@1: ^5.0.0 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
   brace-expansion@5: ^5.0.9 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
   form-data: ^4.0.6 # GHSA-hmw2-7cc7-3qxx
-  js-yaml@4: ^4.3.1 # GHSA-5p4m-2wfm-xmqj
+  js-yaml@4: ^5.0.0 # GHSA-5p4m-2wfm-xmqj
   lodash: ^4.18.0 # GHSA-f23m-r3pf-42rh, GHSA-r5fr-rjxr-66jc
   tmp: ^0.2.6 # GHSA-ph9p-34f9-6g65 (runtime, via tmp-promise)
   uuid@10: ^11.1.1 # GHSA-w5hq-g745-h8pq
