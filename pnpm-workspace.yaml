@@ -1,9 +1,3 @@
-# pnpm settings (moved out of the deprecated `pnpm` field in package.json).
-
-# Refuse to resolve/lock any package version published less than this many
-# minutes ago. Mirrors the CI supply-chain policy so `pnpm install` locally
-# picks the same compliant versions CI will accept, instead of the newest
-# release (which may still be inside the cutoff and fail --frozen-lockfile).
 minimumReleaseAge: 1440
 
 # Packages allowed to run install scripts.
@@ -26,7 +20,7 @@ allowBuilds:
 # our single runtime dependency, tmp-promise. The rest are dev-only, coming in
 # via eslint/gulp.
 overrides:
-  brace-expansion@1: ^1.1.18 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
+  brace-expansion@1: ^5.0.0 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
   brace-expansion@5: ^5.0.9 # GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895
   form-data: ^4.0.6 # GHSA-hmw2-7cc7-3qxx
   js-yaml@4: ^4.3.1 # GHSA-5p4m-2wfm-xmqj
