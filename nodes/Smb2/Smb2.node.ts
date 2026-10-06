@@ -15,9 +15,10 @@ export class Smb2 implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SMB2 using smbclient',
 		name: 'smb2',
-		icon: 'file:smb2.svg',
+		icon: { light: 'file:smb2.svg', dark: 'file:smb2.dark.svg' },
 		group: ['transform'],
-		version: 1,
+		version: [1, 2],
+		defaultVersion: 2,
 		subtitle: '={{$parameter["operation"]}}',
 		description: 'Interact with SMB shares using the smbclient CLI',
 		defaults: {
@@ -43,12 +44,116 @@ export class Smb2 implements INodeType {
 				description: 'Custom path to smbclient binary, if not in PATH',
 			},
 
-			/* Operation */
+			/* Resource (node version 2+) */
+			{
+				displayName: 'Resource',
+				name: 'resource',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: { show: { '@version': [2] } },
+				options: [
+					{
+						name: 'File',
+						value: 'file',
+					},
+					{
+						name: 'Folder',
+						value: 'folder',
+					},
+				],
+				default: 'file',
+			},
+
+			/* Operation (node version 2+, grouped by resource). The values match the
+			   version 1 operations, so the handlers are shared. */
 			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
+				displayOptions: { show: { '@version': [2], resource: ['file'] } },
+				options: [
+					{
+						name: 'Delete',
+						value: 'del',
+						description: 'Delete a file',
+						action: 'Delete a file',
+					},
+					{
+						name: 'Download',
+						value: 'get',
+						description: 'Download a file from SMB',
+						action: 'Download a file',
+					},
+					{
+						name: 'Get Metadata',
+						value: 'stat',
+						description: 'Get the metadata of a file',
+						action: 'Get file metadata',
+					},
+					{
+						name: 'Rename or Move',
+						value: 'rename',
+						description: 'Rename or move a file',
+						action: 'Rename or move a file',
+					},
+					{
+						name: 'Upload',
+						value: 'put',
+						description: 'Upload a file',
+						action: 'Upload a file',
+					},
+				],
+				default: 'get',
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: { show: { '@version': [2], resource: ['folder'] } },
+				options: [
+					{
+						name: 'Create',
+						value: 'mkdir',
+						description: 'Create a folder',
+						action: 'Create a folder',
+					},
+					{
+						name: 'Delete',
+						value: 'rmdir',
+						description: 'Remove an empty folder',
+						action: 'Delete a folder',
+					},
+					{
+						name: 'Get Metadata',
+						value: 'stat',
+						description: 'Get the metadata of a folder',
+						action: 'Get folder metadata',
+					},
+					{
+						name: 'List',
+						value: 'list',
+						description: 'List the contents of a folder',
+						action: 'List a folder',
+					},
+					{
+						name: 'Rename or Move',
+						value: 'rename',
+						description: 'Rename or move a folder',
+						action: 'Rename or move a folder',
+					},
+				],
+				default: 'list',
+			},
+
+			/* Operation (node version 1, kept so existing workflows keep working) */
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				displayOptions: { show: { '@version': [1] } },
 				options: [
 					{
 						name: 'Delete File',

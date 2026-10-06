@@ -5,7 +5,7 @@ export class Smb2Api implements ICredentialType {
 	displayName = 'Smbclient (SMB2) API';
 	documentationUrl = 'https://github.com/JimmyMtl/n8n-nodes-smbclient#credentials';
 
-	icon: Icon = 'file:smb2.svg';
+	icon: Icon = { light: 'file:smb2.svg', dark: 'file:smb2.dark.svg' };
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Server',
