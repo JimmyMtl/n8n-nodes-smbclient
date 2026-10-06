@@ -39,6 +39,11 @@ jobs:
   publish-npm:
     needs: cve-scan
     runs-on: ubuntu-latest
+    # `id-token: write` lets npm mint the provenance statement n8n requires
+    # for verified community nodes.
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -91,6 +96,7 @@ jobs:
 
       # `prepublishOnly` (build + strict lint) runs automatically here.
       - name: Publish to npm
-        run: pnpm publish --no-git-checks
+        # npm (not pnpm) so `--provenance` is honoured regardless of pnpm version.
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,4 +1,5 @@
 Copyright 2025 Nick Penree <nick@penree.com>
+Copyright 2025-2026 JimmyMtl
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

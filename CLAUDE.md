@@ -9,7 +9,7 @@ An [n8n](https://n8n.io/) community node package that lets workflows interact wi
 ## Commands
 
 ```bash
-npm run build      # rimraf dist + tsc compile + gulp copies icons into dist/
+npm run build      # rimraf dist + tsc compile + scripts/copy-icons.js copies icons into dist/
 npm run dev        # tsc --watch
 npm run lint       # eslint on nodes, credentials, package.json (n8n-nodes-base rules)
 npm run lintfix    # eslint --fix

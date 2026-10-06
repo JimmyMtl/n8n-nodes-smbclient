@@ -53,8 +53,6 @@ export default defineConfig([
 		),
 		rules: {
 			"n8n-nodes-base/community-package-json-name-still-default": "off",
-			"n8n-nodes-base/community-package-json-license-missing": "off",
-			"n8n-nodes-base/community-package-json-author-missing": "off",
 		},
 	},
 

@@ -220,7 +220,6 @@ export class Smb2 implements INodeType {
 				out.push(await handler(this, i, client));
 			}
 		} catch (err) {
-			console.error(err);
 			throw new NodeOperationError(
 				this.getNode(),
 				(err as Error)?.message || 'SMB operation failed',
