@@ -59,6 +59,15 @@ The node supports the following operations:
 
 - Rename or moves a file or folder on the SMB share.
 
+Since node version 2, operations are grouped under a **Resource**:
+
+| Resource | Operations                                           |
+| -------- | ---------------------------------------------------- |
+| File     | Delete, Download, Get Metadata, Rename or Move, Upload |
+| Folder   | Create, Delete, Get Metadata, List, Rename or Move   |
+
+Nodes already placed in existing workflows stay on version 1 and keep the flat operation list.
+
 ## Credentials
 
 You need the following credentials to connect to an SMB share:

@@ -155,6 +155,12 @@ export class SmbClientWrapper {
 		});
 	}
 
+	// Connects to the share and runs a no-op command; rejects if the connection
+	// or authentication fails. Used by the credential test.
+	async checkConnection(): Promise<void> {
+		await this.runOne('pwd');
+	}
+
 	async stat(remotePath: string): Promise<SmbStat> {
 		const out = await this.runOne(`allinfo "${remotePath}"`);
 

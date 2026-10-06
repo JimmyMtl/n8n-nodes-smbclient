@@ -135,7 +135,7 @@ const handleRename: OpHandler = async (ctx, i, client) => {
 			// Swallow only "file not found" errors — the destination simply didn't exist.
 			// Any other error (e.g. NT_STATUS_ACCESS_DENIED) must propagate.
 			if (!NOT_FOUND_STATUSES.test(err?.message ?? '')) {
-				throw err;
+				throw new NodeOperationError(ctx.getNode(), err as Error);
 			}
 		}
 	}
