@@ -40,6 +40,11 @@ jobs:
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
+    # `id-token: write` lets npm mint the provenance statement n8n requires
+    # for verified community nodes.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -50,6 +55,7 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org/
       - run: pnpm install --frozen-lockfile
-      - run: pnpm publish --no-git-checks
+      # npm (not pnpm) so `--provenance` is honoured regardless of pnpm version.
+      - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

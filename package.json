@@ -6,7 +6,6 @@
     "n8n-community-node-package",
     "n8n-nodes-smbclient",
     "smb",
-    "smb",
     "samba",
     "binary",
     "file",
@@ -14,10 +13,19 @@
     "node",
     "n8n"
   ],
+  "license": "MIT",
+  "author": {
+    "name": "JimmyMtl",
+    "email": "j.mtlk.pro@outlook.fr"
+  },
   "engines": {
     "node": ">=20.15"
   },
-  "repository": "https://github.com/JimmyMtl/n8n-nodes-smbclient",
+  "homepage": "https://github.com/JimmyMtl/n8n-nodes-smbclient",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JimmyMtl/n8n-nodes-smbclient.git"
+  },
   "main": "index.js",
   "scripts": {
     "build": "npx rimraf dist && tsc && gulp build:icons",
@@ -52,12 +60,5 @@
   },
   "peerDependencies": {
     "n8n-workflow": "^1.115.0 || ^2.0.0"
-  },
-  "dependencies": {
-    "tmp-promise": "^3.0.3"
-  },
-  "overrides": {
-    "form-data": "^4.0.6",
-    "axios": "1.20.0"
   }
 }
