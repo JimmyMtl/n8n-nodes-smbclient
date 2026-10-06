@@ -27,6 +27,9 @@
     "url": "git+https://github.com/JimmyMtl/n8n-nodes-smbclient.git"
   },
   "main": "index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npx rimraf dist && tsc && node scripts/copy-icons.js",
     "dev": "tsc --watch",
@@ -58,6 +61,6 @@
     "typescript": "~6.0.3"
   },
   "peerDependencies": {
-    "n8n-workflow": "^1.115.0 || ^2.0.0"
+    "n8n-workflow": "*"
   }
 }

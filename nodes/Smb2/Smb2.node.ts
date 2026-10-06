@@ -1,12 +1,16 @@
 import type {
+	ICredentialsDecrypted,
+	ICredentialTestFunctions,
 	IExecuteFunctions,
+	INodeCredentialTestResult,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { Operation } from './interfaces';
+import { Operation, Smb2Credentials } from './interfaces';
 import { buildClient, handlers } from './SmbEntryHelpers';
-import { NodeOperationError } from 'n8n-workflow';
+import { getReadableError, SmbClientWrapper } from './SmbClientWrapper';
+import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 export class Smb2 implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SMB2 using smbclient',
@@ -14,16 +18,19 @@ export class Smb2 implements INodeType {
 		icon: 'file:smb2.svg',
 		group: ['transform'],
 		version: 1,
+		subtitle: '={{$parameter["operation"]}}',
 		description: 'Interact with SMB shares using the smbclient CLI',
 		defaults: {
 			name: 'Smbclient (SMB2) API',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
+		usableAsTool: true,
 		credentials: [
 			{
 				name: 'smb2Api',
 				required: true,
+				testedBy: 'smb2ApiConnectionTest',
 			},
 		],
 		properties: [
@@ -202,6 +209,38 @@ export class Smb2 implements INodeType {
 				displayOptions: { show: { operation: ['get'] } },
 			},
 		],
+	};
+
+	methods = {
+		credentialTest: {
+			// The credential has no HTTP endpoint to probe, so connect to the share
+			// with the default `smbclient` binary and run a no-op command.
+			async smb2ApiConnectionTest(
+				this: ICredentialTestFunctions,
+				credential: ICredentialsDecrypted,
+			): Promise<INodeCredentialTestResult> {
+				const { host, username, password, domain, share } =
+					credential.data as unknown as Smb2Credentials;
+				const client = new SmbClientWrapper(
+					{ host, username, password, domain, share },
+					'smbclient',
+					{
+						id: '',
+						name: 'SMB2 credential test',
+						type: 'smb2',
+						typeVersion: 1,
+						position: [0, 0],
+						parameters: {},
+					},
+				);
+				try {
+					await client.checkConnection();
+				} catch (err) {
+					return { status: 'Error', message: getReadableError(err) };
+				}
+				return { status: 'OK', message: 'Connection successful' };
+			},
+		},
 	};
 
 	async execute(this: IExecuteFunctions) {
