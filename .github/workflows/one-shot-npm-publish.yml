@@ -69,12 +69,25 @@ jobs:
 
       # Write the requested version into package.json (no tag/commit yet — we do
       # that ourselves below so the message and tag are under our control).
+      #
+      # If the requested version is already the one in package.json, skip the
+      # bump: this lets a release whose publish step failed be re-run with the
+      # same version instead of burning a new one.
       - name: Set version
         id: bump
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
         run: |
-          # `pnpm version` prints a human message ("Releasing pkg: x → y"), not
-          # the bare version, so read the result back from package.json instead.
-          pnpm version "${{ inputs.version }}" --no-git-tag-version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "${REQUESTED_VERSION#v}" = "${CURRENT_VERSION}" ]; then
+            echo "package.json is already at ${CURRENT_VERSION}; skipping the bump"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            # `pnpm version` prints a human message ("Releasing pkg: x → y"), not
+            # the bare version, so read the result back from package.json instead.
+            pnpm version "${REQUESTED_VERSION}" --no-git-tag-version
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "version=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "Releasing v${NEW_VERSION}"
@@ -84,15 +97,27 @@ jobs:
       # branch is protected (required reviews/checks), the default GITHUB_TOKEN
       # push will be rejected — run releases from an unprotected branch or swap
       # in a PAT/deploy key with bypass rights.
+      #
+      # When the bump was skipped there is nothing to commit; the tag is only
+      # created if it does not exist yet, and an existing tag is never moved.
       - name: Commit and tag
+        env:
+          TAG: ${{ steps.bump.outputs.version }}
+          CHANGED: ${{ steps.bump.outputs.changed }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          TAG="${{ steps.bump.outputs.version }}"
-          git commit -am "chore(release): ${TAG}"
-          git tag -a "${TAG}" -m "${TAG}"
-          git push origin HEAD
-          git push origin "${TAG}"
+          if [ "${CHANGED}" = "true" ]; then
+            git commit -am "chore(release): ${TAG}"
+            git tag -a "${TAG}" -m "${TAG}"
+            git push origin HEAD
+            git push origin "${TAG}"
+          elif [ -n "$(git ls-remote --tags origin "refs/tags/${TAG}")" ]; then
+            echo "::notice::Tag ${TAG} already exists and was left where it is; publishing from ${GITHUB_SHA}"
+          else
+            git tag -a "${TAG}" -m "${TAG}"
+            git push origin "${TAG}"
+          fi
 
       # `prepublishOnly` (build + strict lint) runs automatically here.
       - name: Publish to npm
