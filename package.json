@@ -28,7 +28,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "npx rimraf dist && tsc && gulp build:icons",
+    "build": "npx rimraf dist && tsc && node scripts/copy-icons.js",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
@@ -54,7 +54,6 @@
     "eslint": "^10.3.0",
     "eslint-plugin-n8n-nodes-base": "^2.0.0",
     "globals": "^17.6.0",
-    "gulp": "^5.0.1",
     "prettier": "^3.8.3",
     "typescript": "~6.0.3"
   },
