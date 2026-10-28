@@ -34,7 +34,7 @@ jobs:
           version: latest
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
       - run: pnpm install --frozen-lockfile
 
   publish-npm:
@@ -52,7 +52,7 @@ jobs:
           version: latest
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
           registry-url: https://registry.npmjs.org/
       - run: pnpm install --frozen-lockfile
       # npm (not pnpm) so `--provenance` is honoured regardless of pnpm version.
