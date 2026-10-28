@@ -52,7 +52,7 @@
     "@eslint/compat": "^2.0.5",
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.0.0",
     "@typescript-eslint/parser": "^8.59.1",
     "eslint": "^10.3.0",
     "eslint-plugin-n8n-nodes-base": "^2.0.0",
