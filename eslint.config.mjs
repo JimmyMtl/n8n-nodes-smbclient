@@ -2,22 +2,13 @@ import {defineConfig, globalIgnores} from "eslint/config";
 import globals from "globals";
 import tsParser from "@typescript-eslint/parser";
 import n8nNodesBase from "eslint-plugin-n8n-nodes-base";
-import path from "node:path";
-import {fileURLToPath} from "node:url";
-import js from "@eslint/js";
-import {FlatCompat} from "@eslint/eslintrc";
-import {fixupPluginRules, fixupConfigRules} from "@eslint/compat";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const compat = new FlatCompat({
-	baseDirectory: __dirname,
-	recommendedConfig: js.configs.recommended,
-	allConfig: js.configs.all,
-});
+import {fixupPluginRules} from "@eslint/compat";
 
 const n8nNodesBaseCompat = fixupPluginRules(n8nNodesBase);
+
+// The plugin only ships legacy (eslintrc) configs. Their env/parserOptions are
+// already covered by the shared languageOptions below, so we only need the rules.
+const n8nRules = (name) => n8nNodesBase.configs[name].rules;
 
 export default defineConfig([
 	globalIgnores([
@@ -48,10 +39,8 @@ export default defineConfig([
 		plugins: {
 			"n8n-nodes-base": n8nNodesBaseCompat,
 		},
-		extends: fixupConfigRules(
-			compat.extends("plugin:n8n-nodes-base/community"),
-		),
 		rules: {
+			...n8nRules("community"),
 			"n8n-nodes-base/community-package-json-name-still-default": "off",
 		},
 	},
@@ -61,10 +50,8 @@ export default defineConfig([
 		plugins: {
 			"n8n-nodes-base": n8nNodesBaseCompat,
 		},
-		extends: fixupConfigRules(
-			compat.extends("plugin:n8n-nodes-base/credentials"),
-		),
 		rules: {
+			...n8nRules("credentials"),
 			"n8n-nodes-base/cred-class-field-authenticate-type-assertion": "error",
 			"n8n-nodes-base/cred-class-field-display-name-missing-oauth2": "error",
 			"n8n-nodes-base/cred-class-field-display-name-miscased": "error",
@@ -85,10 +72,8 @@ export default defineConfig([
 		plugins: {
 			"n8n-nodes-base": n8nNodesBaseCompat,
 		},
-		extends: fixupConfigRules(
-			compat.extends("plugin:n8n-nodes-base/nodes"),
-		),
 		rules: {
+			...n8nRules("nodes"),
 
 			'n8n-nodes-base/node-class-description-credentials-name-unsuffixed': 'error',
 			'n8n-nodes-base/node-class-description-display-name-unsuffixed-trigger-node': 'error',
