@@ -145,13 +145,13 @@ npm run build
 REINSTALL_SMB_NODE=true docker compose up -d --force-recreate n8n
 ```
 
-The n8n version is configurable (defaults to the latest stable 2.x):
+The n8n version is configurable (defaults to the `N8N_VERSION` pinned in `docker/Dockerfile`):
 
 ```bash
-N8N_VERSION=2.23.3 docker compose up --build
+N8N_VERSION=2.47.2 docker compose up --build
 ```
 
-> n8n 2.x ships as a hardened Alpine image without a package manager, so the
+> n8n 2.x and later ship as a hardened Alpine image without a package manager, so the
 > Dockerfile installs `samba-client` in a matching Alpine stage and copies the
 > binary and its libraries into the final image.
 

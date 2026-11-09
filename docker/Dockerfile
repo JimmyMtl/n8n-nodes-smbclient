@@ -2,7 +2,7 @@
 # shells out to. The community node itself is installed at startup by
 # entrypoint.sh from the source mounted at /opt/code-temp.
 #
-# n8n 2.x ships as a Docker Hardened Image (Alpine, no package manager), so we
+# n8n 2.x and later ship as a Docker Hardened Image (Alpine, no package manager), so we
 # can't `apk add` directly. Instead we install samba-client in a matching plain
 # Alpine and copy the resulting files (smbclient + its dependency libraries)
 # into the final image.

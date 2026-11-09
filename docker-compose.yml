@@ -35,7 +35,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        N8N_VERSION: ${N8N_VERSION:-2.23.3}
+        # Passed only when set; otherwise the Dockerfile's ARG default is used.
+        - N8N_VERSION
     container_name: n8n-smbclient
     restart: unless-stopped
     ports:
