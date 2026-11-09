@@ -4,12 +4,15 @@ minimumReleaseAge: 1440
 # pnpm 10 reads `onlyBuiltDependencies`; pnpm 11 renamed it to `allowBuilds`.
 # We keep both so the install passes regardless of the pnpm version CI uses
 # (the workflows pin `pnpm/action-setup` to `version: latest`).
+#
+# isolated-vm (n8n-workflow peer -> @n8n/expression-runtime) is explicitly
+# denied: we only need n8n-workflow's typings, and its native addon does not
+# compile against newer Node/V8 releases (e.g. 6.1.2 on Node 26).
 onlyBuiltDependencies:
   - eslint-plugin-n8n-nodes-base
-  - isolated-vm
 allowBuilds:
   eslint-plugin-n8n-nodes-base: true
-  isolated-vm: true
+  isolated-vm: false
 
 # Force patched versions of transitive dependencies flagged by the OSV scan
 # (see .github/workflows/security-cve.yml). Each entry pins the lowest release
